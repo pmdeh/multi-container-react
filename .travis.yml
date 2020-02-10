@@ -1,0 +1,24 @@
+sudo: required
+services:
+    - docker
+
+before_install: 
+    - docker build -t pejam20/react-tests -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true pejam20/react-tests npm test
+
+after_success:
+    - docker build -t pejam20/multi-client ./client
+    - docker build -t pejam20/multi-nginx ./nginx
+    - docker build -t pejam20/multi-server ./server
+    - docker build -t pejam20/multi-worker ./worker
+
+    # Log in to Docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Push images to docker hub
+    - docker push pejam20/multi-client
+    - docker push pejam20/multi-nginx
+    - docker push pejam20/multi-server
+    - docker push pejam20/multi-worker
+
